@@ -1,0 +1,2 @@
+to run inside this directory:
+gunicorn -c guniconf.py cloudcontrol:app
