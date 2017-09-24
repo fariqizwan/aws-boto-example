@@ -1,0 +1,28 @@
+/*.bgattach section {
+	position: relative;
+	background-position: top center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-attachment: fixed;
+*/
+div.bgattach {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	color: #000000;
+	font-weight: bold;
+	background-image: url('http://placehold.it/500x500&text=Sec1');
+	background-position: top center;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+}
+
+div.bgattach2 {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	color: #000000;
+	font-weight: bold;
+	background-image: url('http://placehold.it/500x500&text=Div2');
+	background-attachment: fixed;
+}

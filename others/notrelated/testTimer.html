@@ -1,0 +1,27 @@
+<html>
+<head>
+	<script>
+		var t = 5;
+		var iid;
+		function cdown(){
+			console.log(t);
+			iid = setInterval(function(){
+				document.getElementById('cdown').innerHTML = t;
+				if (t===0){
+					clearInterval(iid);
+					return;
+				}
+				else
+					t--;
+			},1000);
+		}
+	</script>
+</head>
+<body onload="cdown();">
+Please wait...
+<span  style="color: #2E64FE;font-weight: bold" id="cdown"></span>
+	<script>
+		
+	</script>
+</body>
+</html>
