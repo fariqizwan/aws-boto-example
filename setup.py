@@ -1,0 +1,22 @@
+from setuptools import setup
+
+setup(name='CheetahMail Fusion AWS tool',
+      version='0.1',
+      description='Tool to create, update and destroy Cheetahmail Fusion environment',
+      author='Fariq Izwan',
+      author_email='fariq.izwan@my.experian.com',
+      url='https://github.com/orgs/FusionDevOps',
+      install_requires=['Flask==0.10.1',
+			'Flask-HTTPAuth==2.4.0',
+			'gunicorn==19.3.0',
+			'greenlet==0.4.5',
+			'eventlet==0.17.4',
+			'boto==2.34.0',
+			'colorama==0.3.3',
+			'troposphere==0.7.1',
+                        'requests==2.6.2',
+			'bunch==1.0.1',
+                        'pyyaml==3.11',
+			'Unirest==1.1.7',
+			'subprocess32==3.2.6'],
+)
