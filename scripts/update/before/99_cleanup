@@ -1,0 +1,29 @@
+#!/bin/bash
+echo "--- 99_CLEANUP START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+STATUS=0
+# /home/cloudcat/.12345
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+BACKUP="/home/cloudcat/.cloudcontrol_output"
+mkdir -p $BACKUP
+echo "Backing up [ $FAKE_HOME ]"
+mv $FAKE_HOME $BACKUP
+rm -f .output
+
+# Keep latest 3 runs
+ls -at $BACKUP | grep [0-9]
+for dir in `ls -at $BACKUP | grep [0-9] | tail -n +4`; do
+    echo "Cleaning up [ $BACKUP/$dir ]"
+    rm -rf $BACKUP/$dir
+done
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 99_CLEANUP FINISH"
+exit $STATUS

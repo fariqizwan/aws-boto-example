@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "02 AFTER DESTROY START"
+env | grep AWS
+sleep 1
+echo "02 AFTER DESTROY FINISH"
+exit 0

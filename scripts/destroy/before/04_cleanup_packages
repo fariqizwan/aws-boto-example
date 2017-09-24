@@ -1,0 +1,25 @@
+#!/bin/bash
+echo "--- 04_CLEANUP_PACKAGES START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+CMD="/data/cheetah/cloudControl/aws/scripts/cleanup_rpms_on_pkg01 $AWS_ENVNAME"
+echo "ABOUT TO RUN [ $CMD ]"
+`$CMD >.output 2>&1 >>.output`
+STATUS=$?
+OUTPUT=`cat .output`
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+
+echo "rm -rf $TMP"
+rm -rf $TMP
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 04_CLEANUP_PACKAGES FINISH"
+exit 0
+exit $STATUS

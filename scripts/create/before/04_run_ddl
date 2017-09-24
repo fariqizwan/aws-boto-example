@@ -1,0 +1,22 @@
+#!/bin/bash
+echo "--- 04_RUN_DDL START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+# If passing an argument, just run it with backticks
+DESC='ssh -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB "/home/oracle/run_load_ddl $AWS_ENVNAME"'
+echo "ABOUT TO RUN [ $DESC ]"
+CUCM=`ssh -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB "/home/oracle/run_load_ddl $AWS_ENVNAME"`
+STATUS=$?
+
+echo "OUTPUT [ $CUCM ]"
+echo "STATUS [ $STATUS ]"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 04_RUN_DDL FINISH"
+exit $STATUS

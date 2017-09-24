@@ -1,0 +1,81 @@
+#!/bin/bash
+echo "--- 06_GOCD_UPDATE_CRUISE_CONTROL START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+export HOME=$FAKE_HOME
+STATUS=0
+
+if echo $AWS_HOSTS | grep -q go01; then
+    echo "GoCD Server Found"
+else
+    echo "No GoCD in this environment"
+    exit 0
+fi
+
+CRUISE_CONTROL=/home/cloudcat/aws/scripts/gocd_cruise_control
+export PERL5LIB=/home/cloudcat/aws/lib/perl5:/data/perl5/lib/perl5:/data/perl5/lib/perl5/x86_64-linux-thread-multi
+echo "Running [ $CRUISE_CONTROL ]"
+RESULT=`$CRUISE_CONTROL`
+STATUS=$?
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem creating cruise_control.xml! [ STATUS $STATUS ]"
+    echo "RESULTS: [ $RESULTS ]"
+    exit $STATUS
+fi
+
+echo "Created $FAKE_HOME/cruise_control.xml"
+
+echo "scp $FAKE_HOME/cruise-config.xml go01.$AWS_ENVNAME:"
+scp $FAKE_HOME/cruise-config.xml go01.$AWS_ENVNAME:
+STATUS=$?
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem with scp [ STATUS $STATUS ]"
+    exit $STATUS
+fi
+
+echo "About to stop go-server"
+echo "ssh go01.$AWS_ENVNAME -T 'sudo /etc/init.d/go-server stop'"
+RESULTS=`ssh go01.$AWS_ENVNAME -T 'sudo /etc/init.d/go-server stop'`
+STATUS=$?
+echo "RESULTS [ $RESULTS ]"
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem stopping go-server [ STATUS $STATUS ]"
+    exit $STATUS
+fi
+
+echo "ssh go01.$AWS_ENVNAME -T 'sudo cp /home/cloudcat/cruise-config.xml /etc/go/'"
+RESULTS=`ssh go01.$AWS_ENVNAME -T 'sudo cp /home/cloudcat/cruise-config.xml /etc/go/'`
+STATUS=$?
+echo "RESULTS [ $RESULTS ]"
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem with installing cruise-config.xml [ STATUS $STATUS ]"
+    exit $STATUS
+fi
+
+RESULTS=`ssh go01.$AWS_ENVNAME -T 'ls -lt /etc/go'`
+echo "RESULTS [ $RESULTS ]"
+echo "Installed cruise-config.xml on go01.$AWS_ENVNAME"
+
+echo "About to start go-server"
+echo "ssh go01.$AWS_ENVNAME -T 'sudo /etc/init.d/go-server start'"
+RESULTS=`ssh go01.$AWS_ENVNAME -T 'sudo /etc/init.d/go-server start'`
+STATUS=$?
+echo "RESULTS [ $RESULTS ]"
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem starting go-server [ STATUS $STATUS ]"
+    exit $STATUS
+fi
+
+echo "Sleeping for 1 minute to allow the server to warm up"
+sleep 60
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 06_GOCD_UPDATE_CRUISE_CONTROL FINISH"
+exit $STATUS

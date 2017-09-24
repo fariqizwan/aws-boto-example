@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "--- 08_UPDATE_HIERA START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+STATUS=0
+# Update hiera to know the env -> db mapping
+echo 'TODO: Implement me'
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 08_UPDATE_HIERA FINISH"
+exit $STATUS

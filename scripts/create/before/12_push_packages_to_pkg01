@@ -1,0 +1,39 @@
+#!/bin/bash
+echo "--- 12_PUSH_PACKAGES_TO_PKG01 START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+# /home/cloudcat/.12345
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+export HOME=$FAKE_HOME
+
+# /home/cloudcat/.12345/fusion
+FUSION="$FAKE_HOME/fusion"
+echo "FUSION is now '$FUSION'"
+
+cd $FUSION
+TMP="/tmp/.$AWS_PID"
+echo "mkdir -p $TMP"
+mkdir -p $TMP
+cp *.rpm $TMP
+
+CMD="/data/cheetah/cloudControl/aws/scripts/send_rpms_to_pkg01 $AWS_ENVNAME $TMP/*.rpm"
+echo "ABOUT TO RUN [ $CMD ]"
+`$CMD >.output 2>&1 >>.output`
+STATUS=$?
+OUTPUT=`cat .output`
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+
+echo "rm -rf $TMP"
+rm -rf $TMP
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 12_PUSH_PACKAGES_TO_PKG01 FINISH"
+exit 0
+exit $STATUS

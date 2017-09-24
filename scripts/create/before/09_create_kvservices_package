@@ -1,0 +1,33 @@
+#!/bin/bash
+echo "--- 09_CREATE_KVSERVICES_PACKAGE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+STATUS=0
+# Create a kvservices package for each host type the correct hosts
+#
+# Discuss with Pravin, maybe puppet can do this?
+#
+# /data/cheetah/etc/kvservices/$SERVICE_NAME/current        ( link to host )
+# /data/cheetah/etc/kvservices/$SERVICE_NAME/current.lock
+# /data/cheetah/etc/kvservices/$SERVICE_NAME/host_for_service
+#
+#            host_for_service has just hostname:port
+#
+# see /data/cheetah/appconf/service.cfg
+#
+# TODO: fix making of appconf package by creating IS_AWS block for service.cfg.tt
+# TODO: add check to ensure that if there are new services ( [% ELSE %] block)
+#       that we get them too for the IS_VM and IS_AWS blocks
+#
+
+echo 'TODO: Implement me'
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 09_CREATE_KVSERVICES_PACKAGE FINISH"
+exit $STATUS

@@ -1,0 +1,23 @@
+#!/bin/bash
+echo "--- 01_CHECK_ORACLE_SERVER START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+CMD="ssh -oConnectTimeout=5 -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB -T '/home/oracle/hello.sh' 2>&1"
+echo "ABOUT TO RUN [ $CMD ]"
+OUTPUT=`$CMD`
+STATUS=$?
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+if [[ $STATUS -gt "0" ]]; then
+    echo "CHECK THAT $AWS_DB IS UP AND RUNNING!"
+fi
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 01_CHECK_ORACLE_SERVER FINISH"
+exit $STATUS

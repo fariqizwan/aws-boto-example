@@ -1,0 +1,4 @@
+from cfgenerator import cmCloudFormTemplateGenerator
+from cfstackgen import cmCloudFormStackGenerator
+from cfinstance import cmCloudFormInstance
+from autoenvname import cmAwsEnvNameGenerator

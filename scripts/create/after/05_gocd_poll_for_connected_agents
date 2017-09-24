@@ -1,0 +1,46 @@
+#!/bin/bash
+echo "--- 05_GOCD_POLL_FOR_CONNECTED_AGENTS START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+SLEEP=15
+STATUS=0
+TIMEOUT=200
+
+export PERL5LIB=/home/cloudcat/aws/lib/perl5:/data/perl5/lib/perl5:/data/perl5/lib/perl5/x86_64-linux-thread-multi
+ENABLE_AGENTS='/home/cloudcat/aws/scripts/gocd_enable_all_agents'
+
+# Internal Field Separator
+# http://stackoverflow.com/a/7718539/1799189
+IFS=','
+
+if echo $AWS_HOSTS | grep -q go01; then
+    echo "GoCD Server Found"
+else
+    echo "No GoCD in this environment"
+    exit 0
+fi
+
+# Do not include the go server in the host count
+TOTAL_HOSTS=$((`echo $AWS_HOSTS | wc -w` - 1 ))
+
+echo "SCRIPT [ $ENABLE_AGENTS ]"
+echo "TOTAL HOSTS [ $TOTAL_HOSTS ]"
+
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+export HOME=$FAKE_HOME
+
+echo "Running [ $ENABLE_AGENTS $AWS_ENVNAME $TOTAL_HOSTS ]"
+DONE_AGENTS=`$ENABLE_AGENTS $AWS_ENVNAME $TOTAL_HOSTS`
+STATUS=$?
+
+echo "Done Agents [ $DONE_AGENTS / $TOTAL_HOSTS ]"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 05_GOCD_POLL_FOR_CONNECTED_AGENTS FINISH"
+exit $STATUS

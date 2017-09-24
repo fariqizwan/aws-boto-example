@@ -1,0 +1,40 @@
+#!/bin/bash
+echo "--- 07_GOCD_TRIGGER_SANITY_PIPELINE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+export HOME=$FAKE_HOME
+STATUS=0
+
+if echo $AWS_HOSTS | grep -q go01; then
+    echo "GoCD Server Found"
+else
+    echo "No GoCD in this environment"
+    exit 0
+fi
+
+export PERL5LIB=/home/cloudcat/aws/lib/perl5:/data/perl5/lib/perl5:/data/perl5/lib/perl5/x86_64-linux-thread-multi
+
+SANITY='_sanity_kickoff'
+PIPELINE="$AWS_ENVNAME$SANITY"
+
+CMD="/home/cloudcat/aws/scripts/gocd_trigger_pipeline $AWS_ENVNAME $PIPELINE"
+echo "About to run [ $CMD ]"
+RESULT=`$CMD`
+
+STATUS=$?
+if [[ $STATUS -ne "0" ]]; then
+    echo "Problem scheduling pipline $AWS_ENVNAME sanity_kickoff [ $RESULT ]!"
+    exit $STATUS
+fi
+echo "Successfully triggered pipeline $PIPELINE"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 07_GOCD_TRIGGER_SANITY_PIPELINE FINISH"
+exit $STATUS

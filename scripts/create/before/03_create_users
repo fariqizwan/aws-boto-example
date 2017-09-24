@@ -1,0 +1,22 @@
+#!/bin/bash
+echo "--- 03_CREATE_USERS START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+# If passing an argument, just run it with backticks
+DESC='ssh -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB "/home/oracle/run_create_users $AWS_ENVNAME"'
+echo "ABOUT TO RUN [ $DESC ]"
+CUCM=`ssh -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB "/home/oracle/run_create_users $AWS_ENVNAME"`
+STATUS=$?
+
+echo "OUTPUT [ $CUCM ]"
+echo "STATUS [ $STATUS ]"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 03_CREATE_USERS FINISH"
+exit $STATUS

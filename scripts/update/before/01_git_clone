@@ -1,0 +1,59 @@
+#!/bin/bash
+echo "--- 01_GIT_CLONE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+# /home/cloudcat/.12345
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+FAKE_OUT="$FAKE_HOME/.output"
+
+export HOME=$FAKE_HOME
+echo "HOME is now '$FAKE_HOME'"
+
+# /home/cloudcat/.12345/fusion
+FUSION="$FAKE_HOME/fusion"
+echo "FUSION is now '$FUSION'"
+
+# Run Git Clone
+echo "cd $FAKE_HOME"
+cd $FAKE_HOME
+CMD='git clone /repo/git/fusion.git'
+echo "ABOUT TO RUN [ $CMD ]"
+
+`$CMD >$FAKE_OUT 2>&1 >>$FAKE_OUT`
+STATUS=$?
+
+OUTPUT=`cat $FAKE_OUT`
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+
+if $STATUS -ne 0; then
+    echo "--- 01_GIT_CLONE FINISH [ FAILURE IN CLONING ]"
+    exit $STATUS
+fi
+
+# Setup .gitconfig
+echo "cp /home/cloudcat/.gitconfig $FAKE_HOME/"
+cp /home/cloudcat/.gitconfig $FAKE_HOME
+
+echo "cd $FUSION"
+cd $FUSION
+
+# Run Git Merge
+CMD='git merge --no-commit origin/release_packages'
+echo "ABOUT TO RUN [ $CMD ]"
+`$CMD >$FAKE_OUT 2>&1 >>$FAKE_OUT`
+STATUS=$?
+
+OUTPUT=`cat $FAKE_OUT`
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 01_GIT_CLONE FINISH"
+exit $STATUS

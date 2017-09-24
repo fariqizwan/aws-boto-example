@@ -1,0 +1,85 @@
+#!/bin/bash
+echo "--- 04_LOGIN_TO_WELCOME_PAGE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+HOME='/home/cloudcat'
+USER=`cat $HOME/.cloudcat/user | perl -ne 'chomp; print join "", map {chr} map {ord($_)-5} split //;'`
+PASS=`cat $HOME/.cloudcat/pass`
+PASS=$(( $PASS + 3*19 ))
+
+SLEEP=15
+STATUS=0
+
+# Internal Field Separator
+# http://stackoverflow.com/a/7718539/1799189
+IFS=','
+
+TOTAL_STATUS=0
+for HOST in $AWS_HOSTS; do
+
+    if [[ $HOST == web* ]]; then
+
+        FULL_HOST="$HOST.$AWS_ENVNAME"
+        URL="https://$FULL_HOST/cgi-bin/admin/tech/become.cgi"
+        echo "Load Become Page [ $URL ]"
+        wget --no-check-certificate --user=$USER --password=$PASS $URL \
+            -O .become -o .become.log
+        STATUS=$?
+        if [[ $STATUS -ne "0" ]]; then
+            echo "==> FAILURE"
+        else
+            echo "==> SUCCESS"
+        fi
+        TOTAL_STATUS=$(( $TOTAL_STATUS + $STATUS ))
+
+        URL="https://$FULL_HOST/cgi-bin/admin/tech/become.cgi?login=pin&submit=Login!"
+        echo "Login as user pin [ $URL ]"
+        wget --no-check-certificate --user=$USER --password=$PASS $URL \
+            -O .welcome -o .welcome.log
+        STATUS=$?
+        if [[ $STATUS -ne "0" ]]; then
+            echo "==> FAILURE"
+        else
+            echo "==> SUCCESS"
+        fi
+        TOTAL_STATUS=$(( $TOTAL_STATUS + $STATUS ))
+
+        echo "Title is 'Welcome!'"
+        if /bin/cat .welcome | /bin/grep '<title>' | grep 'Welcome!'; then
+            echo "==> SUCCESS"
+        else
+            echo "==> FAILURE"
+            TOTAL_STATUS=$(( $TOTAL_STATUS + 1 ))
+        fi
+
+        URL="https://$FULL_HOST/cm/login"
+        echo "Loading the Regular Login Page [ $URL ]"
+        wget --no-check-certificate --user=$USER --password=$PASS $URL \
+            -O .login -o .login.log
+        STATUS=$?
+        if [[ $STATUS -ne "0" ]]; then
+            echo "==> FAILURE"
+        else
+            echo "==> SUCCESS"
+        fi
+        TOTAL_STATUS=$(( $TOTAL_STATUS + $STATUS ))
+
+        echo "Title is 'Login'"
+        if /bin/cat .login | /bin/grep '<title>' | grep 'Login'; then
+            echo "==> SUCCESS"
+        else
+            echo "==> FAILURE"
+            TOTAL_STATUS=$(( $TOTAL_STATUS + 1 ))
+        fi
+    fi
+done
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 04_LOGIN_TO_WELCOME_PAGE FINISH"
+exit $STATUS

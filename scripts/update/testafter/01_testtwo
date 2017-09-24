@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "test 2"
+sleep 2
+echo "done test 2"

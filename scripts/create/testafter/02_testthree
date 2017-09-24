@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "test 3"
+sleep 3
+#echo "Throwing error"
+#exit 2
+echo "test 3 done!!!"

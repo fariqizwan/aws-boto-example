@@ -1,0 +1,31 @@
+#!/bin/bash
+echo "--- 03_CREATE_CDBDIST_PACKAGE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+STATUS=0
+# Create a cdbdist package for exp with the correct hosts
+#
+# 2755 email:daemon
+# /var/log/cdbdist/H
+#                 /H/web01.$AWS_ENVNAME/d   0755 email:email
+#                 /H/web01.$AWS_ENVNAME/f
+#                 /H/web01.$AWS_ENVNAME/q
+#                 /log                      0744 email:email
+#                 /P
+#                 /Q
+#                 /T
+
+# The list of hosts is any host that is one of
+# [ bar, ebm mta, bounce, smi, sub, tt, adm, pref, ttb, vm, ws ]
+
+echo 'TODO: Implement me'
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 03_CREATE_CDBDIST_PACKAGE FINISH"
+exit $STATUS

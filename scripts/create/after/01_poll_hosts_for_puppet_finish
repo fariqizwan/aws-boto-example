@@ -1,0 +1,65 @@
+#!/bin/bash
+echo "--- 01_POLL_HOSTS_FOR_PUPPET_FINISH START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+HOME='/home/cloudcat'
+CHECK_PUPPET='sudo /bin/cat /var/lib/puppet/state/last_run_summary.yaml'
+SLEEP=15
+STATUS=0
+TIMEOUT=2000
+
+# Internal Field Separator
+# http://stackoverflow.com/a/7718539/1799189
+IFS=','
+
+# Do not include puppet in host count
+TOTAL_HOSTS=$((`echo $AWS_HOSTS | wc -w` - 1 ))
+while true; do
+    DONE_HOSTS=0
+    for HOST in $AWS_HOSTS; do
+
+        # Host does not begin with string 'puppet'
+        if [[ $HOST != puppet* ]]; then
+            # Do not get stuck at password prompts
+            echo "ABOUT TO RUN [ ssh -oStrictHostKeyChecking=no $HOST.$AWS_ENVNAME -T ""$CHECK_PUPPET"" ]"
+            PUPPET_YAML=`ssh -oStrictHostKeyChecking=no $HOST.$AWS_ENVNAME -T "$CHECK_PUPPET"`
+            STATUS=$?
+
+            if [[ $STATUS -ne "0" ]]; then
+                echo "Host '$HOST' not done yet...will retry"
+            else
+                DONE_HOSTS=$(( $DONE_HOSTS + 1 ))
+                echo "$PUPPET_YAML"
+                echo "Host '$HOST' has finished running puppet"
+                echo "DONE_HOSTS: $DONE_HOSTS"
+            fi
+        fi
+    done
+
+    if [[ "$DONE_HOSTS" -lt "TOTAL_HOSTS" ]]; then
+        echo "Not done yet...sleeping for $SLEEP seconds"
+        sleep $SLEEP
+    else
+        break
+    fi
+
+    TOC=`date "+%s"`
+    ELAPSED=$(( $TOC - $TIC ))
+    echo "TIC [ $TIC ] TOC [ $TOC ]"
+    echo "ELAPSED [ $ELAPSED ]"
+    if [[ "$ELAPSED" -gt "$TIMEOUT" ]]; then
+        echo "GIVING UP! TIMEOUT REACHED [ $TIMEOUT ]"
+        STATUS=1
+        break
+    fi
+done
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 01_POLL_HOSTS_FOR_PUPPET_FINISH FINISH"
+exit $STATUS

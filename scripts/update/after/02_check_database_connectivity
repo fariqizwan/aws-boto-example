@@ -1,0 +1,48 @@
+#!/bin/bash
+echo "--- 02_CHECK_DATABASE_CONNECTIVITY START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+HOME='/home/cloudcat'
+MAGIC_NUMBER=1123581321
+CHECK_DATABASE="/data/cheetah/bin/dbquery select $MAGIC_NUMBER from dual"
+SLEEP=15
+STATUS=0
+
+HOSTS_THAT_NEED_DATABASE='bbx,exp,pref,ttb,web'
+# Internal Field Separator
+# http://stackoverflow.com/a/7718539/1799189
+IFS=','
+
+TOTAL_STATUS=0
+for HOST in $AWS_HOSTS; do
+
+    HOST_TYPE=`echo $HOST | perl -pe 's|\d+||;'`
+    if echo $HOSTS_THAT_NEED_DATABASE | perl -pe 's|\s|\n|g;' | grep -qFx $HOST_TYPE; then
+
+        echo "CHECKING DB CONNECTIVITY [ $HOST ]"
+        echo "ABOUT TO RUN [ ssh -oStrictHostKeyChecking=no $HOST.$AWS_ENVNAME -T '$CHECK_DATABASE' ]"
+        NUMBER=`ssh -oStrictHostKeyChecking=no $HOST.$AWS_ENVNAME -T $CHECK_DATABASE`
+        echo "MAGIC_NUMBER is $NUMBER"
+        STATUS=$?
+        if [[ $STATUS -ne "0" ]]; then
+            echo "Host '$HOST' NOT OK!"
+        else
+            if [[ $NUMBER == $MAGIC_NUMBER ]]; then
+                echo "Host '$HOST' OK!"
+            else
+                echo "Host '$HOST' got wrong number?!? $NUMBER should be $MAGIC_NUMBER"
+            fi
+        fi
+        TOTAL_STATUS=$(( $TOTAL_STATUS + $STATUS ))
+    fi
+done
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 02_CHECK_DATABASE_CONNECTIVITY FINISH"
+exit $TOTAL_STATUS

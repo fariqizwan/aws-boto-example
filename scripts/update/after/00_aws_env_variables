@@ -1,0 +1,53 @@
+#!/bin/bash
+echo "--- 00_AWS_ENV_VARIABLES START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+[ -z "$AWS_DB"      ] && { echo "Need to set AWS_DB !";      exit 1; }
+[ -z "$AWS_ENVNAME" ] && { echo "Need to set AWS_ENVNAME !"; exit 1; }
+[ -z "$AWS_HOSTS"   ] && { echo "Need to set AWS_HOSTS !";   exit 1; }
+[ -z "$AWS_PID"     ] && { echo "Need to set AWS_PID !";     exit 1; }
+[ -z "$AWS_START"   ] && { echo "Need to set AWS_START !";   exit 1; }
+[ -z "$AWS_USER"    ] && { echo "Need to set AWS_USER !";    exit 1; }
+
+if whoami | grep -q cloudcat; then
+    echo "Running scripts as cloudcat"
+else
+    echo "su - cloudcat and rerun these scripts"
+    exit 1
+fi
+
+# Clear out known hosts, as ip addresses get reused
+echo '' > /home/cloudcat/.ssh/known_hosts
+
+# /home/cloudcat/.12345
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+rm -rf $FAKE_HOME
+mkdir -p $FAKE_HOME
+cd $FAKE_HOME
+
+rm -f aws_env.sh
+touch aws_env.sh
+echo '#!/bin/bash'                       >> aws_env.sh
+echo "export AWS_DB=$AWS_DB"             >> aws_env.sh
+echo "export AWS_ENVNAME=$AWS_ENVNAME"   >> aws_env.sh
+echo "export AWS_HOSTS=$AWS_HOSTS"       >> aws_env.sh
+echo "export AWS_PID=$AWS_PID"           >> aws_env.sh
+echo "export AWS_START=$AWS_START"       >> aws_env.sh
+echo "export AWS_USER=$AWS_USER"         >> aws_env.sh
+
+if [ -f /home/cloudcat/.gocdrc ]; then
+    cp /home/cloudcat/.gocdrc $FAKE_HOME
+else
+    echo "Need to create '/home/cloudcat/.gocdrc'"
+    exit 1
+fi
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 00_AWS_ENV_VARIABLES FINISH"
+exit $STATUS

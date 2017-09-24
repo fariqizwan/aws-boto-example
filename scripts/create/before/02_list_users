@@ -1,0 +1,28 @@
+#!/bin/bash
+echo "--- 02_LIST_USERS START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+CMD="ssh -i /home/cloudcat/.ssh/oraclekey oracle@$AWS_DB -T '/home/oracle/run_list_users' 2>&1"
+echo "ABOUT TO RUN [ $CMD ]"
+OUTPUT=`$CMD`
+STATUS=$?
+echo "OUTPUT [ $OUTPUT ]"
+echo "STATUS [ $STATUS ]"
+
+STATUS=0
+if echo $OUTPUT | grep -qFx $AWS_ENVNAME; then
+    echo "$AWS_ENVNAME already exists on $AWS_DB !!! Aborting !!!"
+    STATUS=1
+else
+    echo "We can proceed with creating $AWS_ENVNAME on $AWS_DB"
+fi
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 02_LIST_USERS FINISH"
+exit $STATUS

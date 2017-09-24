@@ -1,0 +1,51 @@
+#!/bin/bash
+echo "--- 06_CREATE_ETC_MOTD_PACKAGE START"
+echo "### ENVIRONMENT ###"
+env | grep AWS | sort
+echo "### ENVIRONMENT ###"
+TIC=`date "+%s"`
+
+STATUS=0
+
+FAKE_HOME="/home/cloudcat/.$AWS_PID"
+FAKE_OUT="$FAKE_HOME/.output"
+export HOME=$FAKE_HOME
+
+FUSION="$FAKE_HOME/fusion"
+echo "cd $FUSION"
+
+cd $FUSION
+
+rm -f aws_motd
+
+cat /data/cheetah/cloudControl/aws/misc/puma2.txt | head -n 31 > aws_motd
+# Width of image
+WIDTH=80
+
+DATE=`date -d @$AWS_START`
+
+# Center the text
+TXT="Welcome to $AWS_ENVNAME!"
+printf "%*s\n\n" $(((${#TXT}+$WIDTH)/2)) "$TXT" >> aws_motd
+TXT="Created by $AWS_USER on $DATE [ $AWS_START ]"
+printf "%*s\n\n" $(((${#TXT}+$WIDTH)/2)) "$TXT" >> aws_motd
+TXT="Hosts [ $AWS_HOSTS ]"
+printf "%*s\n\n" $(((${#TXT}+$WIDTH)/2)) "$TXT" >> aws_motd
+TXT="Database [ $AWS_DB ]"
+printf "%*s\n\n" $(((${#TXT}+$WIDTH)/2)) "$TXT" >> aws_motd
+
+cat aws_motd
+
+SHA1=`git log -1 --format="%H" | cut -b-10`
+echo "SHA1 [ $SHA1 ]"
+/data/cheetah/cloudControl/aws/scripts/package_for_file --file=aws_motd --dest=/etc \
+    --name=ctah-etc-motd-$AWS_ENVNAME-$AWS_START.$SHA1
+STATUS=$?
+echo "STATUS [ $STATUS ]"
+
+TOC=`date "+%s"`
+ELAPSED=$(( $TOC - $TIC ))
+TOTAL=$(( $TOC - $AWS_START ))
+echo ">>> TOOK $ELAPSED SECONDS [ $TOTAL SECONDS TOTAL ]"
+echo "--- 06_CREATE_ETC_MOTD_PACKAGE START"
+exit $STATUS
